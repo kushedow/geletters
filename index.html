@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Учи грузинский алфавит</title>
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <!-- Vue Demi (необходим для Pinia в браузере) -->
+    <script src="https://unpkg.com/vue-demi@0.14.7/lib/index.iife.js"></script>
+    <!-- Pinia -->
+    <script src="https://unpkg.com/pinia@2.1.7/dist/pinia.iife.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans Georgian', 'Noto Sans', sans-serif;
+            background-color: #ffffff;
+        }
+        .georgian-letter {
+            font-size: 8rem;
+            line-height: 1;
+        }
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.3s ease;
+        }
+        .fade-enter-from, .fade-leave-to {
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script>
+        // Глобальный доступ к библиотекам через IIFE сборки
+        const { createApp, ref, computed } = Vue;
+        const { createPinia, defineStore } = Pinia;
+
+        // Константы алфавита (Мхедрули)
+        const GEORGIAN_ALPHABET = [
+            { letter: 'ა', trans: 'a' }, { letter: 'ბ', trans: 'b' }, { letter: 'გ', trans: 'g' },
+            { letter: 'დ', trans: 'd' }, { letter: 'ე', trans: 'e' }, { letter: 'в', trans: 'v' },
+            { letter: 'ზ', trans: 'z' }, { letter: 'თ', trans: 't' }, { letter: 'ი', trans: 'i' },
+            { letter: 'კ', trans: 'k\'' }, { letter: 'ლ', trans: 'l' }, { letter: 'მ', trans: 'm' },
+            { letter: 'ნ', trans: 'n' }, { letter: 'ო', trans: 'o' }, { letter: 'პ', trans: 'p\'' },
+            { letter: 'ჟ', trans: 'zh' }, { letter: 'რ', trans: 'r' }, { letter: 'ს', trans: 's' },
+            { letter: 'ტ', trans: 't\'' }, { letter: 'უ', trans: 'u' }, { letter: 'ფ', trans: 'p' },
+            { letter: 'ქ', trans: 'k' }, { letter: 'ღ', trans: 'gh' }, { letter: 'ყ', trans: 'q\'' },
+            { letter: 'შ', trans: 'sh' }, { letter: 'ჩ', trans: 'ch' }, { letter: 'ც', trans: 'ts' },
+            { letter: 'ძ', trans: 'dz' }, { letter: 'წ', trans: 'ts\'' }, { letter: 'ჭ', trans: 'ch\'' },
+            { letter: 'ხ', trans: 'kh' }, { letter: 'ჯ', trans: 'j' }, { letter: 'ჰ', trans: 'h' }
+        ];
+
+        // Инициализация Store
+        const useGameStore = defineStore('game', {
+            state: () => ({
+                currentScreen: 'start', // 'start', 'quiz', 'results'
+                currentStep: 0,
+                score: 0,
+                totalSteps: 10,
+                currentLetter: null,
+                options: [],
+                feedback: null,
+                history: []
+            }),
+            actions: {
+                startGame() {
+                    this.currentScreen = 'quiz';
+                    this.currentStep = 1;
+                    this.score = 0;
+                    this.history = [];
+                    this.generateQuestion();
+                },
+                generateQuestion() {
+                    this.feedback = null;
+                    const correctIdx = Math.floor(Math.random() * GEORGIAN_ALPHABET.length);
+                    this.currentLetter = GEORGIAN_ALPHABET[correctIdx];
+                    
+                    let choices = [this.currentLetter.trans];
+                    while (choices.length < 4) {
+                        const randomIdx = Math.floor(Math.random() * GEORGIAN_ALPHABET.length);
+                        const randomTrans = GEORGIAN_ALPHABET[randomIdx].trans;
+                        if (!choices.includes(randomTrans)) {
+                            choices.push(randomTrans);
+                        }
+                    }
+                    this.options = choices.sort(() => Math.random() - 0.5);
+                },
+                submitAnswer(selectedTrans, event) {
+                    if (this.feedback) return;
+
+                    // Снимаем фокус с кнопки
+                    if (event && event.currentTarget) {
+                        event.currentTarget.blur();
+                    }
+
+                    const isCorrect = selectedTrans === this.currentLetter.trans;
+                    if (isCorrect) this.score++;
+                    
+                    this.feedback = { isCorrect, selected: selectedTrans };
+                    this.history.push({
+                        letter: this.currentLetter.letter,
+                        correct: this.currentLetter.trans,
+                        selected: selectedTrans,
+                        isCorrect
+                    });
+
+                    setTimeout(() => {
+                        if (this.currentStep < this.totalSteps) {
+                            this.currentStep++;
+                            this.generateQuestion();
+                        } else {
+                            this.currentScreen = 'results';
+                        }
+                    }, 1200);
+                },
+                resetGame() {
+                    this.currentScreen = 'start';
+                }
+            }
+        });
+
+        // Главный компонент приложения
+        const App = {
+            template: `
+                <div class="min-h-screen flex items-center justify-center p-4 bg-white text-black">
+                    <div class="max-w-md w-full bg-white rounded-3xl shadow-xl overflow-hidden border border-black/10">
+                        
+                        <!-- Экран 1: Старт -->
+                        <div v-if="store.currentScreen === 'start'" class="p-8 text-center">
+                            <div class="mb-6 text-6xl text-black font-bold drop-shadow-sm">ა ბ გ</div>
+                            <h1 class="text-3xl font-bold text-black mb-4 tracking-tight">Грузинский Алфавит</h1>
+                            <p class="text-black/60 mb-8 leading-relaxed">Изучайте буквы Мхедрули в игровой форме. Угадайте транскрипцию 10 символов!</p>
+                            <button @click="store.startGame" class="w-full py-4 bg-black hover:bg-black/80 text-white rounded-2xl font-bold text-xl transition-all transform hover:scale-[1.02] active:scale-95 shadow-lg shadow-black/10">
+                                Начать сессию
+                            </button>
+                        </div>
+
+                        <!-- Экран 2: Тест -->
+                        <div v-if="store.currentScreen === 'quiz'" class="p-6">
+                            <div class="flex justify-between items-center mb-8">
+                                <span class="text-xs font-bold uppercase tracking-wider text-black/40">Шаг {{ store.currentStep }} / {{ store.totalSteps }}</span>
+                                <div class="h-2 w-32 bg-black/5 rounded-full overflow-hidden">
+                                    <div class="h-full bg-black transition-all duration-500 ease-out" :style="{ width: (store.currentStep / store.totalSteps * 100) + '%' }"></div>
+                                </div>
+                                <span class="text-xs font-bold uppercase tracking-wider text-black/60">Верно: {{ store.score }}</span>
+                            </div>
+
+                            <div class="flex flex-col items-center mb-10 min-h-[220px] justify-center">
+                                <transition name="fade" mode="out-in">
+                                    <div :key="store.currentLetter.letter" class="georgian-letter font-bold text-black drop-shadow-md">
+                                        {{ store.currentLetter.letter }}
+                                    </div>
+                                </transition>
+                                <div class="h-8 mt-4">
+                                    <transition name="fade">
+                                        <p v-if="store.feedback" :class="store.feedback.isCorrect ? 'text-black' : 'text-black/40'" class="font-bold text-lg text-center">
+                                            {{ store.feedback.isCorrect ? 'Правильно!' : 'Это буква «' + store.currentLetter.trans + '»' }}
+                                        </p>
+                                    </transition>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <button 
+                                    v-for="opt in store.options" 
+                                    :key="opt"
+                                    @click="store.submitAnswer(opt, $event)"
+                                    :disabled="!!store.feedback"
+                                    :class="getButtonClass(opt)"
+                                    class="py-5 px-4 rounded-2xl text-2xl font-semibold transition-all border-2 shadow-sm uppercase"
+                                >
+                                    {{ opt }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Экран 3: Результаты -->
+                        <div v-if="store.currentScreen === 'results'" class="p-8 text-center">
+                            <h2 class="text-2xl font-bold text-black mb-2 uppercase tracking-tight">Ваш результат</h2>
+                            <div class="text-7xl font-black text-black my-6 drop-shadow-sm">{{ store.score }}<span class="text-3xl text-black/20">/{{ store.totalSteps }}</span></div>
+                            <p class="text-black/60 mb-8 font-medium">
+                                {{ resultMessage }}
+                            </p>
+                            
+                            <div class="max-h-48 overflow-y-auto mb-8 bg-black/[0.02] rounded-2xl p-4 text-left border border-black/5">
+                                <div v-for="(h, idx) in store.history" :key="idx" class="flex items-center justify-between py-2 border-b last:border-0 border-black/5">
+                                    <span class="text-2xl font-bold text-black">{{ h.letter }}</span>
+                                    <div class="text-right">
+                                        <span v-if="!h.isCorrect" class="text-xs text-black/40 mr-2 uppercase line-through">{{ h.selected }}</span>
+                                        <span :class="h.isCorrect ? 'text-black' : 'text-black/60'" class="font-bold text-lg uppercase">
+                                            {{ h.correct }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3">
+                                <button @click="store.startGame" class="w-full py-4 bg-black hover:bg-black/90 text-white rounded-2xl font-bold text-xl transition-all shadow-lg">
+                                    Попробовать снова
+                                </button>
+                                <button @click="store.resetGame" class="w-full py-3 text-black/40 hover:text-black/60 font-bold uppercase text-xs tracking-widest">
+                                    Вернуться в меню
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            `,
+            setup() {
+                const store = useGameStore();
+
+                const resultMessage = computed(() => {
+                    const ratio = store.score / store.totalSteps;
+                    if (ratio === 1) return "გაგიმარჯოს! Идеальный результат!";
+                    if (ratio >= 0.7) return "Отлично! Вы почти запомнили алфавит.";
+                    if (ratio >= 0.4) return "Хорошая попытка, продолжайте тренироваться.";
+                    return "Не сдавайтесь! Грузинская письменность требует времени.";
+                });
+
+                const getButtonClass = (opt) => {
+                    if (!store.feedback) {
+                        return 'bg-white border-black/10 text-black hover:border-black/40 hover:text-black active:bg-black/[0.02]';
+                    }
+                    
+                    if (opt === store.currentLetter.trans) {
+                        return 'bg-black border-black text-white transform scale-[1.02]';
+                    }
+                    
+                    if (store.feedback.selected === opt && !store.feedback.isCorrect) {
+                        return 'bg-white border-black text-black';
+                    }
+
+                    return 'bg-black/[0.02] border-black/[0.02] text-black/20 opacity-60';
+                };
+
+                return { store, resultMessage, getButtonClass };
+            }
+        };
+
+        // Запуск приложения
+        window.onload = () => {
+            const app = createApp(App);
+            const pinia = createPinia();
+            app.use(pinia);
+            app.mount('#app');
+        };
+    </script>
+</body>
+</html>
