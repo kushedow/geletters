@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Учи грузинский алфавит</title>
+    <title>Учим грузинский алфавит</title>
     <!-- Vue 3 -->
-    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-    <!-- Vue Demi (необходим для Pinia в браузере) -->
-    <script src="https://unpkg.com/vue-demi@0.14.7/lib/index.iife.js"></script>
-    <!-- Pinia -->
-    <script src="https://unpkg.com/pinia@2.1.7/dist/pinia.iife.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Pinia 3 -->
+    <script src="https://unpkg.com/pinia@3/dist/pinia.iife.prod.js"></script>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;700&display=swap" rel="stylesheet">
@@ -35,28 +33,50 @@
 
     <script>
         // Глобальный доступ к библиотекам через IIFE сборки
-        const { createApp, ref, computed } = Vue;
+        const { createApp, computed } = Vue;
         const { createPinia, defineStore } = Pinia;
 
         // Константы алфавита (Мхедрули)
         const GEORGIAN_ALPHABET = [
-            { letter: 'ა', trans: 'a' }, { letter: 'ბ', trans: 'b' }, { letter: 'გ', trans: 'g' },
-            { letter: 'დ', trans: 'd' }, { letter: 'ე', trans: 'e' }, { letter: 'в', trans: 'v' },
-            { letter: 'ზ', trans: 'z' }, { letter: 'თ', trans: 't' }, { letter: 'ი', trans: 'i' },
-            { letter: 'კ', trans: 'k\'' }, { letter: 'ლ', trans: 'l' }, { letter: 'მ', trans: 'm' },
-            { letter: 'ნ', trans: 'n' }, { letter: 'ო', trans: 'o' }, { letter: 'პ', trans: 'p\'' },
-            { letter: 'ჟ', trans: 'zh' }, { letter: 'რ', trans: 'r' }, { letter: 'ს', trans: 's' },
-            { letter: 'ტ', trans: 't\'' }, { letter: 'უ', trans: 'u' }, { letter: 'ფ', trans: 'p' },
-            { letter: 'ქ', trans: 'k' }, { letter: 'ღ', trans: 'gh' }, { letter: 'ყ', trans: 'q\'' },
-            { letter: 'შ', trans: 'sh' }, { letter: 'ჩ', trans: 'ch' }, { letter: 'ც', trans: 'ts' },
-            { letter: 'ძ', trans: 'dz' }, { letter: 'წ', trans: 'ts\'' }, { letter: 'ჭ', trans: 'ch\'' },
-            { letter: 'ხ', trans: 'kh' }, { letter: 'ჯ', trans: 'j' }, { letter: 'ჰ', trans: 'h' }
+            { letter: 'ა', trans: 'a', ru: 'а', mnemonic: 'Похожа на крючок с петелькой, как маленькая буква а на нитке.' },
+            { letter: 'ბ', trans: 'b', ru: 'б', mnemonic: 'Напоминает русскую б, у которой нижняя часть стала круглой и открытой.' },
+            { letter: 'გ', trans: 'g', ru: 'г', mnemonic: 'Похожа на гусиную шею: изогнулась и смотрит вправо.' },
+            { letter: 'დ', trans: 'd', ru: 'д', mnemonic: 'Похожа на дольку или каплю с хвостиком.' },
+            { letter: 'ე', trans: 'e', ru: 'э', mnemonic: 'Похожа на открытую скобку с язычком, как рот, говорящий э.' },
+            { letter: 'ვ', trans: 'v', ru: 'в', mnemonic: 'Похожа на волну или маленькую веревочную петлю.' },
+            { letter: 'ზ', trans: 'z', ru: 'з', mnemonic: 'Напоминает цифру 3, поэтому легко связать со звуком з.' },
+            { letter: 'თ', trans: 't', ru: 'т', mnemonic: 'Похожа на круглый барабан, по которому стучат: т-т-т.' },
+            { letter: 'ი', trans: 'i', ru: 'и', mnemonic: 'Похожа на тонкую иголку или вертикальную палочку.' },
+            { letter: 'კ', trans: 'k\'', ru: 'к', mnemonic: 'Похожа на ключ с острым зубцом.' },
+            { letter: 'ლ', trans: 'l', ru: 'л', mnemonic: 'Похожа на длинную ленту, которая загнулась вниз.' },
+            { letter: 'მ', trans: 'm', ru: 'м', mnemonic: 'Похожа на мягкую волну с двумя бугорками, как буква м.' },
+            { letter: 'ნ', trans: 'n', ru: 'н', mnemonic: 'Похожа на носик с маленьким изгибом.' },
+            { letter: 'ო', trans: 'o', ru: 'о', mnemonic: 'Почти круглая, как овал или буква о.' },
+            { letter: 'პ', trans: 'p\'', ru: 'п', mnemonic: 'Похожа на петлю с ножкой: петелька помогает вспомнить п.' },
+            { letter: 'ჟ', trans: 'zh', ru: 'ж', mnemonic: 'Похожа на жука с усиком сверху.' },
+            { letter: 'რ', trans: 'r', ru: 'р', mnemonic: 'Похожа на ручку или крючок, который рычит р-р-р.' },
+            { letter: 'ს', trans: 's', ru: 'с', mnemonic: 'Похожа на след змейки, которая шипит с-с-с.' },
+            { letter: 'ტ', trans: 't\'', ru: 'т', mnemonic: 'Похожа на тяжелый молоточек для резкого т.' },
+            { letter: 'უ', trans: 'u', ru: 'у', mnemonic: 'Похожа на ушко или чашечку, куда звук у уходит вниз.' },
+            { letter: 'ფ', trans: 'p', ru: 'п', mnemonic: 'Похожа на флажок на высокой стойке.' },
+            { letter: 'ქ', trans: 'k', ru: 'к', mnemonic: 'Похожа на клюв птицы, который резко щелкает к.' },
+            { letter: 'ღ', trans: 'gh', ru: 'г', mnemonic: 'Похожа на горлышко кувшина, для глубокого г.' },
+            { letter: 'ყ', trans: 'q\'', ru: 'к', mnemonic: 'Похожа на крюк с острым нижним хвостом для твердого к.' },
+            { letter: 'შ', trans: 'sh', ru: 'ш', mnemonic: 'Похожа на широкую щетку: шуршит ш-ш-ш.' },
+            { letter: 'ჩ', trans: 'ch', ru: 'ч', mnemonic: 'Похожа на чашку с ручкой.' },
+            { letter: 'ც', trans: 'ts', ru: 'ц', mnemonic: 'Похожа на цаплю на одной ноге.' },
+            { letter: 'ძ', trans: 'dz', ru: 'дз', mnemonic: 'Похожа на зубчатый крючок: сначала д, потом з.' },
+            { letter: 'წ', trans: 'ts\'', ru: 'ц', mnemonic: 'Похожа на цаплю с длинным клювом для резкого ц.' },
+            { letter: 'ჭ', trans: 'ch\'', ru: 'ч', mnemonic: 'Похожа на чашку с высокой ручкой для резкого ч.' },
+            { letter: 'ხ', trans: 'kh', ru: 'х', mnemonic: 'Похожа на раскрытую пасть, из которой выходит х.' },
+            { letter: 'ჯ', trans: 'j', ru: 'дж', mnemonic: 'Похожа на джойстик с изогнутой ручкой.' },
+            { letter: 'ჰ', trans: 'h', ru: 'х', mnemonic: 'Похожа на легкий выдох с хвостиком.' }
         ];
 
         // Инициализация Store
         const useGameStore = defineStore('game', {
             state: () => ({
-                currentScreen: 'start', // 'start', 'quiz', 'results'
+                currentScreen: 'start', // 'start', 'letters', 'quiz', 'results'
                 currentStep: 0,
                 score: 0,
                 totalSteps: 10,
@@ -73,22 +93,25 @@
                     this.history = [];
                     this.generateQuestion();
                 },
+                showLetters() {
+                    this.currentScreen = 'letters';
+                },
                 generateQuestion() {
                     this.feedback = null;
                     const correctIdx = Math.floor(Math.random() * GEORGIAN_ALPHABET.length);
                     this.currentLetter = GEORGIAN_ALPHABET[correctIdx];
                     
-                    let choices = [this.currentLetter.trans];
+                    let choices = [this.currentLetter.ru];
                     while (choices.length < 4) {
                         const randomIdx = Math.floor(Math.random() * GEORGIAN_ALPHABET.length);
-                        const randomTrans = GEORGIAN_ALPHABET[randomIdx].trans;
-                        if (!choices.includes(randomTrans)) {
-                            choices.push(randomTrans);
+                        const randomRu = GEORGIAN_ALPHABET[randomIdx].ru;
+                        if (!choices.includes(randomRu)) {
+                            choices.push(randomRu);
                         }
                     }
                     this.options = choices.sort(() => Math.random() - 0.5);
                 },
-                submitAnswer(selectedTrans, event) {
+                submitAnswer(selectedRu, event) {
                     if (this.feedback) return;
 
                     // Снимаем фокус с кнопки
@@ -96,14 +119,14 @@
                         event.currentTarget.blur();
                     }
 
-                    const isCorrect = selectedTrans === this.currentLetter.trans;
+                    const isCorrect = selectedRu === this.currentLetter.ru;
                     if (isCorrect) this.score++;
                     
-                    this.feedback = { isCorrect, selected: selectedTrans };
+                    this.feedback = { isCorrect, selected: selectedRu };
                     this.history.push({
                         letter: this.currentLetter.letter,
-                        correct: this.currentLetter.trans,
-                        selected: selectedTrans,
+                        correct: this.currentLetter.ru,
+                        selected: selectedRu,
                         isCorrect
                     });
 
@@ -132,13 +155,44 @@
                         <div v-if="store.currentScreen === 'start'" class="p-8 text-center">
                             <div class="mb-6 text-6xl text-black font-bold drop-shadow-sm">ა ბ გ</div>
                             <h1 class="text-3xl font-bold text-black mb-4 tracking-tight">Грузинский Алфавит</h1>
-                            <p class="text-black/60 mb-8 leading-relaxed">Изучайте буквы Мхедрули в игровой форме. Угадайте транскрипцию 10 символов!</p>
-                            <button @click="store.startGame" class="w-full py-4 bg-black hover:bg-black/80 text-white rounded-2xl font-bold text-xl transition-all transform hover:scale-[1.02] active:scale-95 shadow-lg shadow-black/10">
-                                Начать сессию
-                            </button>
+                            <p class="text-black/60 mb-8 leading-relaxed">Изучайте буквы Мхедрули в игровой форме. Угадайте звучание 10 символов!</p>
+                            <div class="space-y-3">
+                                <button @click="store.startGame" class="w-full py-4 bg-black hover:bg-black/80 text-white rounded-2xl font-bold text-xl transition-all transform hover:scale-[1.02] active:scale-95 shadow-lg shadow-black/10">
+                                    Начать сессию
+                                </button>
+                                <button @click="store.showLetters" class="w-full py-3 border-2 border-black/10 hover:border-black/30 text-black rounded-2xl font-bold text-lg transition-all active:scale-95">
+                                    Все буквы
+                                </button>
+                            </div>
                         </div>
 
-                        <!-- Экран 2: Тест -->
+                        <!-- Экран 2: Все буквы -->
+                        <div v-if="store.currentScreen === 'letters'" class="p-6">
+                            <div class="flex items-center justify-between mb-5">
+                                <h2 class="text-2xl font-bold text-black tracking-tight">Все буквы</h2>
+                                <button @click="store.resetGame" class="px-4 py-2 text-sm font-bold text-black/50 hover:text-black border border-black/10 rounded-xl transition-colors">
+                                    Назад
+                                </button>
+                            </div>
+
+                            <div class="max-h-[70vh] overflow-y-auto pr-1 space-y-3">
+                                <div v-for="item in allLetters" :key="item.letter" class="flex gap-4 p-4 rounded-2xl border border-black/10 bg-black/[0.02]">
+                                    <div class="w-14 shrink-0 text-center text-5xl font-bold leading-none text-black">
+                                        {{ item.letter }}
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="mb-1 text-lg font-bold text-black">
+                                            {{ item.ru }} <span class="text-sm font-medium text-black/35">/ {{ item.trans }}</span>
+                                        </div>
+                                        <p class="text-sm leading-relaxed text-black/60">
+                                            {{ item.mnemonic }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Экран 3: Тест -->
                         <div v-if="store.currentScreen === 'quiz'" class="p-6">
                             <div class="flex justify-between items-center mb-8">
                                 <span class="text-xs font-bold uppercase tracking-wider text-black/40">Шаг {{ store.currentStep }} / {{ store.totalSteps }}</span>
@@ -157,7 +211,7 @@
                                 <div class="h-8 mt-4">
                                     <transition name="fade">
                                         <p v-if="store.feedback" :class="store.feedback.isCorrect ? 'text-black' : 'text-black/40'" class="font-bold text-lg text-center">
-                                            {{ store.feedback.isCorrect ? 'Правильно!' : 'Это буква «' + store.currentLetter.trans + '»' }}
+                                            {{ store.feedback.isCorrect ? 'Правильно!' : 'Это звук «' + store.currentLetter.ru + '»' }}
                                         </p>
                                     </transition>
                                 </div>
@@ -170,14 +224,14 @@
                                     @click="store.submitAnswer(opt, $event)"
                                     :disabled="!!store.feedback"
                                     :class="getButtonClass(opt)"
-                                    class="py-5 px-4 rounded-2xl text-2xl font-semibold transition-all border-2 shadow-sm uppercase"
+                                    class="py-5 px-4 rounded-2xl text-2xl font-semibold transition-all border-2 shadow-sm"
                                 >
                                     {{ opt }}
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Экран 3: Результаты -->
+                        <!-- Экран 4: Результаты -->
                         <div v-if="store.currentScreen === 'results'" class="p-8 text-center">
                             <h2 class="text-2xl font-bold text-black mb-2 uppercase tracking-tight">Ваш результат</h2>
                             <div class="text-7xl font-black text-black my-6 drop-shadow-sm">{{ store.score }}<span class="text-3xl text-black/20">/{{ store.totalSteps }}</span></div>
@@ -189,8 +243,8 @@
                                 <div v-for="(h, idx) in store.history" :key="idx" class="flex items-center justify-between py-2 border-b last:border-0 border-black/5">
                                     <span class="text-2xl font-bold text-black">{{ h.letter }}</span>
                                     <div class="text-right">
-                                        <span v-if="!h.isCorrect" class="text-xs text-black/40 mr-2 uppercase line-through">{{ h.selected }}</span>
-                                        <span :class="h.isCorrect ? 'text-black' : 'text-black/60'" class="font-bold text-lg uppercase">
+                                        <span v-if="!h.isCorrect" class="text-xs text-black/40 mr-2 line-through">{{ h.selected }}</span>
+                                        <span :class="h.isCorrect ? 'text-black' : 'text-black/60'" class="font-bold text-lg">
                                             {{ h.correct }}
                                         </span>
                                     </div>
@@ -212,6 +266,7 @@
             `,
             setup() {
                 const store = useGameStore();
+                const allLetters = GEORGIAN_ALPHABET;
 
                 const resultMessage = computed(() => {
                     const ratio = store.score / store.totalSteps;
@@ -226,7 +281,7 @@
                         return 'bg-white border-black/10 text-black hover:border-black/40 hover:text-black active:bg-black/[0.02]';
                     }
                     
-                    if (opt === store.currentLetter.trans) {
+                    if (opt === store.currentLetter.ru) {
                         return 'bg-black border-black text-white transform scale-[1.02]';
                     }
                     
@@ -237,7 +292,7 @@
                     return 'bg-black/[0.02] border-black/[0.02] text-black/20 opacity-60';
                 };
 
-                return { store, resultMessage, getButtonClass };
+                return { store, allLetters, resultMessage, getButtonClass };
             }
         };
 
